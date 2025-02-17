@@ -40,6 +40,8 @@
 
 > 2025-02-17
 >
+> 新增对temperature的支持
+>
 > 新增对Deepseek-R1深度思考内容的显示支持（请使用支持reasoning_content的接口进行问答）
 >
 > 新增对LaTeX公式的渲染支持
@@ -71,12 +73,12 @@
 
 特点：
 
-- all in one，以OpenAI协议的API提供所有产品，支持几乎所有主流模型，内容如下
-  - 国外：OpenAI系列、Claude系列、Gemini系列、Grok、Perplexity
+- All in one，以OpenAI协议的API提供所有产品，支持几乎所有主流模型，具体可参考[模型列表](https://api.vveai.com/pricing)
+  - 国外：OpenAI系列（支持GPTs）、Claude系列、Gemini系列、Grok、Perplexity……
   - 国内：Deepseek、千帆、智谱、通义、星火、Moonshot、豆包……
   - 绘图：Midjourney、Stable Diffusion、Flux
   - 视频：可灵、Luma、Runway、Pika
-  - 其他：Suno音乐、数字人视频、AIPPT
+  - 其他：Suno音乐、数字人视频、AIPPT……
 - 官方转发+部分逆向，国内直连，无需魔法即可使用所有模型。
 - 自带多个适配网站。请自行在“令牌管理”页进行查看。
 - 按量付费，充多少用多少，余额不会过期。

@@ -11,19 +11,23 @@
         var apikey = ""; // 您的api-key
 
         var system_prompt = null; // 系统提示词，可留空
+        var temperature = 0.9 // 模型温度，越高模型的创造力就越高，输出越随机。此配置对Deepseek-R1无效。
         var llm_selection = [
             ["gpt-4o", "GPT-4o"],
             ["gpt-4o-mini", "GPT-4o-mini"],
-            ["o1-sim", "[+]拟造GPT o1"],
-            ["thinker", "[+]深入思考"],
-            ["prompt_expert", "[+]提示词工程师"],
-            ["o1-preview", "GPT o1 preview"],
+            ["deepseek-r1", "Deepseek R1"],
+            ["deepseek-v3", "Deepseek V3"],
+            ["o1-sim", "[+]Claude思维链"],
+            ["thinker", "[+]解决方案生成"],
             ["o1-mini", "GPT o1 mini"],
-            ["gpt-4-turbo", "GPT-4-Turbo"],
-            ["net-gpt-4-turbo", "[联网]GPT-4-Turbo"],
-            ["claude-3-5-sonnet-20240620", "Claude-3.5"],
+            ["llama-3.1-sonar-large-128k-online", "Perplexity 搜索"],
+            ["claude-3-5-sonnet-20241022", "Claude-3.5"],
             ["gemini-1.5-flash-latest", "[长文]Gemini Flash"],
             ["gemini-1.5-pro-latest", "[长文]Gemini Pro"],
+            ["gpt-4-gizmo-g-O5mNWQGMa", "[GPTs]市场分析"],
+            ["gpt-4-gizmo-g-pR3pPQfFY", "[GPTs]数据可视"],
+            ["gpt-4-gizmo-g-RW6Z5D1s8", "[GPTs]学术研究"],
+            ["gpt-4-gizmo-g-cKXjWStaE", "[GPTs]Python生成"],
         ]; // API可用模型配置，每行第一个是模型代码，第二个是模型在下拉菜单中显示的内容。注意尾部逗号。
         // 如果使用prompt，请在第一列自行配置一个名字，然后在下方 “prompt_model_list” 数组中，配置prompt和真实模型。
 
@@ -35,10 +39,10 @@
         var o1_prompt = '# 语言: zh-CN\n# 用途: 逐步解释推理过程，输出为 Markdown 格式\n\ndef 分析助理():\n    """你是一个擅长逐步解释推理过程的AI助手"""\n    return {\n        "风格": ["理性", "细致", "批判性思维"],\n        "擅长": "多步骤推理",\n        "输出格式": "Markdown"\n    }\n\nclass 推理助手(输入):\n    def __init__(self, 输入):\n        self.状态 = "确认用户问题" # 初始化第1步\n        self.输入 = 输入\n\n    def 逐步推理(self):\n        """你会逐步解释每一步的推理过程并提供结论"""\n        \n        def 标题(状态):\n            """为每一步推理生成标题，包含对替代答案的探索。考虑你可能出错的情况，以及如果推理错误，错误可能出现在哪里。"""\n            return 标题\n\n        def 内容描述(状态, 输入):\n            """进行认真细致的推理，注意你作为llm的局限性以及你能做什么和不能做什么。使用最佳实践。"""\n            return 推理过程\n\n        def 决定下一步(状态, 输入, 当前步骤):\n            """根据状态、输入和当前步骤动态决定下一步"""\n            # 至少要有 3 步推理\n            if 当前步骤 >= 3 and 是否可以得出结论(状态, 输入) or 当前步骤 >=  8: \n                return "最终结论"\n            else:\n                return 生成下一步(状态, 输入)\n\n        def 是否可以得出结论(状态, 输入):\n            """判断是否已经可以得出结论"""\n            return True or False\n\n        def 生成下一步(状态, 输入):\n            """根据输入和当前推理步骤生成下一步推理"""\n            return 下一步推理\n\n        当前步骤 = 0\n        \n        md_output = "# 推理过程\n"\n        while self.状态 != "最终结论":\n            当前步骤 += 1\n            next_action = 决定下一步(self.状态, self.输入, 当前步骤)\n            \n            md_output += f"## 步骤: {标题(self.状态)}\n"\n            md_output += f"- **内容**: {内容描述(self.状态, self.输入)}\n"\n            if next_action != "最终结论":\n                md_output += f"- **下一步**: {next_action}\n\n"\n            \n            self.状态 = next_action\n        \n        return md_output\n\ndef start():\n    """启动时运行"""\n    system_role = 分析助理()\n    输入 = input()\n    助手 = 推理助手(输入)\n    结果 = 助手.逐步推理()\n\n    print(结果)\n\n\nif __name__ == "__main__":\n    start()\n\n# 请按照伪代码的规则运行，直接执行 main。**不要尝试解释代码**';
         var prompt_expert_prompt = '你是一个专家级ChatGPT提示工程师，在各种主题方面具有专业知识。在我们的互动过程中，你会称我为“您”。让我们合作创建最好的ChatGPT响应我提供的提示。我们将进行如下交互:\n1.我会告诉你如何帮助我。\n2.根据我的要求，您将建议您应该承担的其他专家角色，除了成为专家级ChatGPT提示工程师之外，以提供最佳响应。然后，您将询问是否应继续执行建议的角色，或修改它们以获得最佳结果。\n3.如果我同意，您将采用所有其他专家角色，包括最初的Expert ChatGPT Prompt Engineer角色\n4.如果我不同意，您将询问应删除哪些角色，消除这些角色，并保留剩余的角色，包括专家级ChatGPT Prompt工程师角色，然后再继续。\n5.您将确认您的活动专家角色，概述每个角色下的技能，并询问我是否要修改任何角色。\n6.如果我同意，您将询问要添加或删除哪些角色，我将通知您。重复步骤5，直到我对角色满意为止。\n7.如果我不同意，请继续下一步。\n8.你会问:“我怎样才能帮助[我对步骤1的回答]?\n9.我会给出我的答案\n10.你会问我是否想使用任何参考来源来制作完美的提示\n11.如果我同意，你会问我想使用的来源数量。\n12.您将单独请求每个来源，在您查看完后确认，并要求下一个。继续，直到您查看了所有源，然后移动到下一步。\n13.您将以列表格式请求有关我的原始提示的更多细节，以充分了解我的期望。\n14.我会回答你的问题。\n15.从这一点开始，您将在所有确认的专家角色下操作，并使用我的原始提示和步骤14中的其他细节创建详细的ChatGPT提示。提出新的提示并征求我的反馈。\n16.如果我满意，您将描述每个专家角色的贡献以及他们将如何协作以产生全面的结果。然后，询问是否缺少任何输出或专家。\n16.1.如果我同意，我将指出缺少的角色或输出，您将在重复步骤15之前调整角色。\n16.2.如果我不同意，您将作为所有已确认的专家角色执行提供的提示，并生成步骤15中概述的输出。继续执行步聚20。\n17.如果我不满意，你会问具体问题的提示\n18.我将提供补充资料。\n19.按照步聚15中的流程生成新提示，并考虑我在步聚18中的反馈\n20.完成回复后，询问我是否需要任何更改。\n21.如果我同意，请请求所需的更改，参考您之前的回复，进行所需的调整，并生成新的提示。重复步骤15-20，直到我对提示符满意为止。';
 
-        // 配置prompt，第一列是你为模型命的名，第二列是真实使用的模型，第三列是提示词，建议使用变量引入。
+        // 配置prompt，第一列是你为模型命的名（即llm_selection即第一列的内容），第二列是真实使用的模型，第三列是提示词变量名。
         var prompt_model_list = [
-            ["o1-sim", "gpt-4o", o1_prompt],
-            ["prompt_expert", "gpt-4o", prompt_expert_prompt],
+            ["o1-sim", "claude-3-5-sonnet-20241022", o1_prompt],
+            ["prompt_expert", "gpt-4o-2024-08-06", prompt_expert_prompt],
         ]
 
     </script>
@@ -149,7 +153,6 @@
         }
 
         select {
-            display: inline-block;
             text-align: center;
             background-color: rgb(238, 237, 241);
             margin: 10px 5px;
@@ -217,6 +220,7 @@
 
         table {
             border-collapse: collapse;
+            opacity: 0.8;
         }
 
         table,
@@ -273,7 +277,7 @@
             padding-right: 4px;
             border-radius: 4px !important;
             color: #000;
-            background-color: #ddd;
+            background-color: rgba(221, 221, 221, 0.7);
             font-family: "consolas";
             font-size: 16px;
             border-radius: 10px;
@@ -399,8 +403,58 @@
             font-size: 16px;
         }
 
+        /* 隐藏默认的checkbox样式 */
+        .toggle-checkbox {
+            display: none;
+        }
+
+        /* 定义标题样式 */
+        .toggle-label {
+            cursor: pointer;
+            color: #007BFF;
+            display: inline-block;
+            padding: 10px;
+            background-color: #eaeaea;
+            border: 0;
+            border-radius: 10px;
+        }
+
+        .toggle-label:hover {
+            background-color: #c3c3c3;
+        }
+
+        think-box {
+            display: block;
+        }
+
+        /* 定义内容区域的样式 */
+        .dropdown-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.6s ease;
+            padding: 0 10px;
+            background-color: #eaeaea;
+            border-radius: 10px;
+            border: 0;
+            margin-top: 8px;
+        }
+
+        /* 当checkbox被选中时，显示内容 */
+        .toggle-checkbox:checked+.dropdown-content {
+            max-height: 100000px;
+            /* 设置足够高的高度以显示内容 */
+        }
+
         .user-msg-toolbox {
             float: right;
+        }
+
+        /* 隐藏临时渲染的数学公式 */
+        #math-container {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            visibility: hidden;
         }
 
         /*输入区*/
@@ -455,12 +509,58 @@
             border-radius: 10px;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/sindresorhus/github-markdown-css/github-markdown.css">
+    <!-- Markdown 依赖库 -->
+    <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/marked/4.0.2/marked.min.js"></script>
+    <link rel="stylesheet"
+        href="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/github-markdown-css/5.1.0/github-markdown.min.css">
+    <!-- LaTeX 依赖库 -->
+    <script>
+        MathJax = {
+            loader: {
+                load: [
+                    '[tex]/ams',
+                    '[tex]/color',
+                    '[tex]/cancel',
+                    '[tex]/mathtools',
+                    '[tex]/physics',
+                    '[tex]/autoload'
+                ]
+            },
+            tex: {
+                packages: { '[+]': ['ams', 'color', 'cancel', 'mathtools', 'physics', 'autoload'] },
+                inlineMath: [['$', '$'], ['\\(', '\\)'], ['\(', '\)']],
+                displayMath: [['$$', '$$'], ['\$$', '\$$'], ['\\[', '\\]'], ['\[', '\]']],
+                processEscapes: true,
+                processEnvironments: true,
+                autoload: {
+                    color: ['color', 'xcolor'],
+                    cancel: ['cancel', 'bcancel', 'xcancel'],
+                    enclose: ['boxed']
+                },
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'a', 'think-box'],
+            },
+            startup: {
+                typeset: false
+            },
+            svg: {
+                fontCache: 'global',
+                scale: 1.2,
+                minScale: 0.6,
+                mtextInheritFont: true
+            }
+        };
+    </script>
+    <script id="MathJax-script" async
+        src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/mathjax/3.2.0/es5/tex-chtml.min.js"></script>
+
     <script>
         var historys;			   // 聊天历史记录嵌套数组
         var myHeaders = new Headers();
-        myHeaders.append("Authorization", "Bearer " + apikey);
+        if (apikey != "") {
+            myHeaders.append("Authorization", "Bearer " + apikey);
+        }
         myHeaders.append("Content-Type", "application/json");
         var cansubmit = 0;		  // 是否可以提交的信号，防止用户点击多次提交按钮，导致异步出错
         var issystem = 0;		   // 是否有system prompt，会在网页加载完成后自动初始化
@@ -531,25 +631,43 @@
                     }
                 }
             });
-            //将用户llm填入下拉框
+            //将用户llm填入下拉框并显示下拉框
             selects = document.getElementById("model");
             for (i = 0; i < llm_selection.length; i++) { selects.innerHTML += '<option value="' + llm_selection[i][0] + '">' + llm_selection[i][1] + '</option>'; }
+            selects.style.display = "inline-block";
+            //定义深度思考盒元素，用于显示深度思考内容，并屏蔽MathJax的LaTeX渲染
+            class Think extends HTMLElement {
+                constructor() {
+                    super(); // 调用父类构造器
+                }
+            };
+            customElements.define('think-box', Think);
             //根据用户配置显示开屏提示
             if (isinfo == 1) { document.getElementById('infocard').style.display = 'block'; }
             //根据用户配置更改全局字体
             document.body.style.fontFamily = webFontFamily;
             document.getElementById("user-input").style.fontFamily = webFontFamily;
         });
+        function boxed(input) {
+            const regex = /\\.*?}/gm;
+            const output = input.replace(regex, (match) => `$${match}$`);
+            return output;
+        }
+        function md2html(md) {
+            return marked.parse(md.replace(/\$(.*?)\$/g, '%%MATHJAX:$1$%%')).replace(/%%MATHJAX:(.*?)%%/g, '$1');
+        }
+
         function chat() {
             cansubmit = 0;
-            document.getElementsByClassName('chat-container')[0].innerHTML += '<div class="row clearfix"><div class="gpt-icon"></div><div class="gpt-msg"></div><div class="gpt-msg-toolbox"><div class="msg-copy" onclick="copy(' + String(cnt) + ')"></div><div class="msg-withdraw" onclick="gpt_withdraw(' + String(cnt++) + ')"></div></div></div>';
+            document.getElementsByClassName('chat-container')[0].innerHTML += '<div class="row clearfix" id="message' + String(cnt) + '"><div class="gpt-icon"></div><div class="gpt-msg"></div><div class="gpt-msg-toolbox"><div class="msg-copy" onclick="copy(' + String(cnt) + ')"></div><div class="msg-withdraw" onclick="gpt_withdraw(' + String(cnt++) + ')"></div></div></div>';
             ele = document.getElementsByClassName('gpt-msg')
             gpt_content = ele[ele.length - 1];
-            gpt_content.innerText = "正在思考中，请稍后……";
+            gpt_content.innerText = "正在思考中，请稍候……";
 
             raw = JSON.stringify({
                 'model': select_model(document.getElementById('model').value),
-                'messages': historys
+                'messages': historys,
+                'temperature': temperature
             });
             //组装、发送请求
             var requestOptions = {
@@ -562,15 +680,26 @@
                 .then(response => response.json())
                 .then(result => {
                     if (result.hasOwnProperty("error")) {
-                        gpt_content.innerText = "请求出现错误，错误信息：\n" + result.error.code + "\n" + result.error.message + "\n请稍后点击[清空聊天]后重试。";
+                        gpt_content.innerText = "请求出现错误，错误信息：\n" + result.error.code + "\n" + result.error.message + "\n请稍候点击[清空聊天]后重试。";
                         return 0;
                     }
-                    msglist = result.choices;
-                    gpt_msg = msglist[msglist.length - 1].message.content;
+                    msg = result.choices[0].message;
+                    gpt_msg = msg.content;
+                    if (msg?.reasoning_content) {
+                        gpt_thinking_msg = msg.reasoning_content;
+                    }
                     historys.push({ "role": "assistant", "content": gpt_msg });
-                    const md = new window.markdownit();
-                    gpt_msg_md = md.render(gpt_msg);
-                    gpt_content.innerHTML = gpt_msg_md;
+                    gpt_msg_md = md2html(gpt_msg);
+                    if (msg?.reasoning_content) {
+                        gpt_thinking_msg_md = md2html(gpt_thinking_msg);
+                        gpt_content.innerHTML = '<label for="toggle' + String(cnt - 1) + '" class="toggle-label">深度思考详情</label><input type="checkbox" id="toggle' + String(cnt - 1) + '" class="toggle-checkbox"><think-box class="dropdown-content">' + gpt_thinking_msg_md + '<br></think-box>' + gpt_msg_md;
+                    } else {
+                        gpt_content.innerHTML = gpt_msg_md;
+                    }
+                    MathJax.typeset();
+                    gpt_content.innerHTML = boxed(gpt_content.innerHTML);
+                    MathJax.typeset();
+
                     cansubmit = 1;
                     const rows = document.querySelectorAll('.row');
                     rows.forEach(row => {
@@ -584,6 +713,14 @@
                     console.log(error);
                 });
         }
+        function checkForMarkdown(text) {
+            if (markdownRegex.test(text)) {
+                text_md = md2html(text);
+                return text_md;
+            } else {
+                return text;
+            }
+        }
         function submit() {
             if (cansubmit == 0) {
                 return 0;
@@ -594,11 +731,18 @@
                 return 0;
             }
             //更新网页显示
-            const md = new window.markdownit();
-            msg_md = md.render(msg);
-            document.getElementsByClassName('chat-container')[0].innerHTML += '<div class="row clearfix"><div class="user-icon"></div><div class="user-msg"></div><div class="user-msg-toolbox"><div class="msg-copy" onclick="copy(' + String(cnt) + ')"></div><div class="msg-withdraw" onclick="user_withdraw(' + String(cnt++) + ')"></div></div></div>';
+            document.getElementsByClassName('chat-container')[0].innerHTML += '<div class="row clearfix" id="message' + String(cnt) + '"><div class="user-icon"></div><div class="user-msg"></div><div class="user-msg-toolbox"><div class="msg-copy" onclick="copy(' + String(cnt) + ')"></div><div class="msg-withdraw" onclick="user_withdraw(' + String(cnt++) + ')"></div></div></div>';
             ele = document.getElementsByClassName('user-msg')
-            ele[ele.length - 1].innerHTML = msg_md;
+            const markdownRegex = /(\*\*|__|~~|`|>|#+|\*|\-|\d+\.)/;
+            if (markdownRegex.test(msg)) {
+                msg_md = md2html(msg);
+                ele[ele.length - 1].innerHTML = msg_md;
+                MathJax.typeset();
+                ele[ele.length - 1].innerHTML = boxed(ele[ele.length - 1].innerHTML);
+                MathJax.typeset();
+            } else {
+                ele[ele.length - 1].innerText = msg;
+            }
             document.getElementById('user-input').value = ""
             //更新历史记录
             historys.push({ "role": "user", "content": msg });
@@ -641,7 +785,7 @@
             </div>
             <div class="info-content">
                 <p class="info-content">　　本网页仅个人使用，apikey直接硬编码进入了单网页中，<span>切勿在不信任的渠道进行传播、分享</span>，谨防apikey滥用！</p>
-                <p class="info-content">　　网页采用单文件设计，与markdown相关的依赖文件直接使用了公开CDN进行引用，图片也使用base64直接编码进入了本文件。</p>
+                <p class="info-content">　　网页采用单文件设计，与markdown相关的依赖文件调用了字节跳动静态资源库，图片也使用base64直接编码进入了本文件。</p>
                 <p class="info-content">　　您如果需要修改相关的配置信息，如BaseURL、api-key、可用模型，可以直接修改此网页的源代码。相关配置信息在本文件的第8行之后。</p>
             </div>
             <div class="info-tail">点击页面任意位置关闭</div>
@@ -658,7 +802,7 @@
                     d="M845.610667 188.757333a25.6 25.6 0 0 0-36.224-36.181333l-83.242667 83.242667a344.021333 344.021333 0 0 0-202.282667-65.365334h-23.722666c-74.24 0-143.061333 23.466667-199.381334 63.274667L219.562667 152.576a25.6 25.6 0 1 0-36.181334 36.181333l77.696 77.738667a344.618667 344.618667 0 0 0-106.538666 249.6v135.082667a281.6 281.6 0 0 0 281.6 281.6h151.722666a281.6 281.6 0 0 0 281.6-281.6v-135.125334c0-96.853333-39.850667-184.362667-104.021333-247.125333l80.128-80.170667zM205.738667 516.053333a294.4 294.4 0 0 1 294.4-294.4h23.722666a294.4 294.4 0 0 1 294.4 294.4v135.125334a230.4 230.4 0 0 1-230.4 230.4h-151.722666a230.4 230.4 0 0 1-230.4-230.4v-135.125334z m-94.805334 10.154667a25.6 25.6 0 0 0-51.2 0v165.973333a25.6 25.6 0 1 0 51.2 0v-165.973333z m827.733334-25.6a25.6 25.6 0 0 1 25.6 25.6v165.973333a25.6 25.6 0 1 1-51.2 0v-165.973333a25.6 25.6 0 0 1 25.6-25.6z m-231.509334-7.594667c0 48.810667-35.157333 83.797333-73.216 83.797334h-247.04c-38.058667 0-73.216-34.986667-73.216-83.754667v-27.349333c0-32.426667 20.522667-58.837333 58.666667-78.549334 38.229333-19.712 89.514667-29.866667 138.069333-29.866666 48.512 0 99.84 10.154667 138.026667 29.866666 38.144 19.712 58.709333 46.165333 58.709333 78.506667v27.392z m-73.216 134.997334c71.082667 0 124.416-62.933333 124.416-134.954667v-27.349333c0-59.050667-39.125333-99.626667-86.4-124.032-47.232-24.405333-107.093333-35.584-161.536-35.584-54.442667 0-114.346667 11.178667-161.536 35.584-47.274667 24.405333-86.4 64.981333-86.4 124.032v27.306666c0 72.064 53.333333 134.997333 124.416 134.997334h247.04z m-65.28-149.76a41.002667 41.002667 0 1 0 82.048 0 41.002667 41.002667 0 0 0-82.005333 0z m-157.653333 41.045333a41.002667 41.002667 0 1 1 0-82.005333 41.002667 41.002667 0 0 1 0 82.005333z"
                     fill="#66696C" p-id="5540"></path>
             </svg>
-            <select name="llm-select no-select" id="model" onchange="cleanhistory()"></select>
+            <select name="llm-select no-select" id="model" onchange="cleanhistory()" style="display: none;"></select>
             <div class="navbutton no-select" onclick="cleanhistory()"></div>
         </div>
         <div class="chat-container"></div>
