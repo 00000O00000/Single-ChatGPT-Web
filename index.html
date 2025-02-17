@@ -7,36 +7,62 @@
     <title>简易ChatGPT</title>
     <script>
         // AI配置
-        var api = ""; // 您的api地址
+        var api = "https://api.openai.com/v1/chat/completions"; // 您的api地址
         var apikey = ""; // 您的api-key
-        var system_prompt = ""; // 系统提示词，可留空
+
+        var system_prompt = null; // 系统提示词，可留空
         var llm_selection = [
             ["gpt-4o", "GPT-4o"],
             ["gpt-4o-mini", "GPT-4o-mini"],
-            ["gpt-4-turbo", "GPT-4"],
-            ["gpt-3.5-turbo-16k", "GPT-3.5-16k"],
-            ["claude-3-5-sonnet-20240620", "claude-3.5"],
+            ["o1-sim", "[+]拟造GPT o1"],
+            ["thinker", "[+]深入思考"],
+            ["prompt_expert", "[+]提示词工程师"],
+            ["o1-preview", "GPT o1 preview"],
+            ["o1-mini", "GPT o1 mini"],
+            ["gpt-4-turbo", "GPT-4-Turbo"],
+            ["net-gpt-4-turbo", "[联网]GPT-4-Turbo"],
+            ["claude-3-5-sonnet-20240620", "Claude-3.5"],
+            ["gemini-1.5-flash-latest", "[长文]Gemini Flash"],
+            ["gemini-1.5-pro-latest", "[长文]Gemini Pro"],
         ]; // API可用模型配置，每行第一个是模型代码，第二个是模型在下拉菜单中显示的内容。注意尾部逗号。
+        // 如果使用prompt，请在第一列自行配置一个名字，然后在下方 “prompt_model_list” 数组中，配置prompt和真实模型。
+
         // 网页配置
         var isinfo = 1;// 是否有开屏提示信息
-        var webFontFamily = "微软雅黑, 楷体";// 网页全局字体，多个字体用英文逗号隔开，越靠前优先级越高
+        var webFontFamily = "华文中宋, 微软雅黑, 楷体";// 网页全局字体，多个字体用英文逗号隔开，越靠前优先级越高
+
+        // 使用额外变量保存的prompt。请注意，prompt两边使用单引号进行引用，因此内部的文本出现的单引号需要转义。
+        var o1_prompt = '# 语言: zh-CN\n# 用途: 逐步解释推理过程，输出为 Markdown 格式\n\ndef 分析助理():\n    """你是一个擅长逐步解释推理过程的AI助手"""\n    return {\n        "风格": ["理性", "细致", "批判性思维"],\n        "擅长": "多步骤推理",\n        "输出格式": "Markdown"\n    }\n\nclass 推理助手(输入):\n    def __init__(self, 输入):\n        self.状态 = "确认用户问题" # 初始化第1步\n        self.输入 = 输入\n\n    def 逐步推理(self):\n        """你会逐步解释每一步的推理过程并提供结论"""\n        \n        def 标题(状态):\n            """为每一步推理生成标题，包含对替代答案的探索。考虑你可能出错的情况，以及如果推理错误，错误可能出现在哪里。"""\n            return 标题\n\n        def 内容描述(状态, 输入):\n            """进行认真细致的推理，注意你作为llm的局限性以及你能做什么和不能做什么。使用最佳实践。"""\n            return 推理过程\n\n        def 决定下一步(状态, 输入, 当前步骤):\n            """根据状态、输入和当前步骤动态决定下一步"""\n            # 至少要有 3 步推理\n            if 当前步骤 >= 3 and 是否可以得出结论(状态, 输入) or 当前步骤 >=  8: \n                return "最终结论"\n            else:\n                return 生成下一步(状态, 输入)\n\n        def 是否可以得出结论(状态, 输入):\n            """判断是否已经可以得出结论"""\n            return True or False\n\n        def 生成下一步(状态, 输入):\n            """根据输入和当前推理步骤生成下一步推理"""\n            return 下一步推理\n\n        当前步骤 = 0\n        \n        md_output = "# 推理过程\n"\n        while self.状态 != "最终结论":\n            当前步骤 += 1\n            next_action = 决定下一步(self.状态, self.输入, 当前步骤)\n            \n            md_output += f"## 步骤: {标题(self.状态)}\n"\n            md_output += f"- **内容**: {内容描述(self.状态, self.输入)}\n"\n            if next_action != "最终结论":\n                md_output += f"- **下一步**: {next_action}\n\n"\n            \n            self.状态 = next_action\n        \n        return md_output\n\ndef start():\n    """启动时运行"""\n    system_role = 分析助理()\n    输入 = input()\n    助手 = 推理助手(输入)\n    结果 = 助手.逐步推理()\n\n    print(结果)\n\n\nif __name__ == "__main__":\n    start()\n\n# 请按照伪代码的规则运行，直接执行 main。**不要尝试解释代码**';
+        var prompt_expert_prompt = '你是一个专家级ChatGPT提示工程师，在各种主题方面具有专业知识。在我们的互动过程中，你会称我为“您”。让我们合作创建最好的ChatGPT响应我提供的提示。我们将进行如下交互:\n1.我会告诉你如何帮助我。\n2.根据我的要求，您将建议您应该承担的其他专家角色，除了成为专家级ChatGPT提示工程师之外，以提供最佳响应。然后，您将询问是否应继续执行建议的角色，或修改它们以获得最佳结果。\n3.如果我同意，您将采用所有其他专家角色，包括最初的Expert ChatGPT Prompt Engineer角色\n4.如果我不同意，您将询问应删除哪些角色，消除这些角色，并保留剩余的角色，包括专家级ChatGPT Prompt工程师角色，然后再继续。\n5.您将确认您的活动专家角色，概述每个角色下的技能，并询问我是否要修改任何角色。\n6.如果我同意，您将询问要添加或删除哪些角色，我将通知您。重复步骤5，直到我对角色满意为止。\n7.如果我不同意，请继续下一步。\n8.你会问:“我怎样才能帮助[我对步骤1的回答]?\n9.我会给出我的答案\n10.你会问我是否想使用任何参考来源来制作完美的提示\n11.如果我同意，你会问我想使用的来源数量。\n12.您将单独请求每个来源，在您查看完后确认，并要求下一个。继续，直到您查看了所有源，然后移动到下一步。\n13.您将以列表格式请求有关我的原始提示的更多细节，以充分了解我的期望。\n14.我会回答你的问题。\n15.从这一点开始，您将在所有确认的专家角色下操作，并使用我的原始提示和步骤14中的其他细节创建详细的ChatGPT提示。提出新的提示并征求我的反馈。\n16.如果我满意，您将描述每个专家角色的贡献以及他们将如何协作以产生全面的结果。然后，询问是否缺少任何输出或专家。\n16.1.如果我同意，我将指出缺少的角色或输出，您将在重复步骤15之前调整角色。\n16.2.如果我不同意，您将作为所有已确认的专家角色执行提供的提示，并生成步骤15中概述的输出。继续执行步聚20。\n17.如果我不满意，你会问具体问题的提示\n18.我将提供补充资料。\n19.按照步聚15中的流程生成新提示，并考虑我在步聚18中的反馈\n20.完成回复后，询问我是否需要任何更改。\n21.如果我同意，请请求所需的更改，参考您之前的回复，进行所需的调整，并生成新的提示。重复步骤15-20，直到我对提示符满意为止。';
+
+        // 配置prompt，第一列是你为模型命的名，第二列是真实使用的模型，第三列是提示词，建议使用变量引入。
+        var prompt_model_list = [
+            ["o1-sim", "gpt-4o", o1_prompt],
+            ["prompt_expert", "gpt-4o", prompt_expert_prompt],
+        ]
+
     </script>
     <!--
-    API说明
-    Github上有许多官方转发API，本站使用这些转发API进行工作。如果运行此网页的机器使用了代理，也可以直接使用官方API进行GPT问答。
-    推荐一些转发API的申请点（注册超过7天的Github账号可申请免费apikey，具体请看对应页面）
-    [ChatAnyWhere]：https://github.com/chatanywhere/GPT_API_free
-        - 免费Key申请地址：https://api.chatanywhere.org/v1/oauth/free/github/render
+	API说明
+	Github上有许多官方转发API，本站使用这些转发API进行工作。如果运行此网页的机器使用了代理，也可以直接使用官方API进行GPT问答。
+	推荐一些转发API的申请点（注册超过7天的Github账号可申请免费apikey，具体请看对应页面）
+	
+	[V3 API][推荐]：https://github.com/popjane/free_chatgpt_api
+		- 免费Key申请地址：https://free.gpt.ge/github
+		- API地址：(免费)https://free.gpt.ge/v1/chat/completions
+				  (付费)https://api.gpt.ge/v1/chat/completions
+		- 付费API购买地址：https://shop.gpt.ge/
+		- 可用模型列表：https://api.gpt.ge/pricing
+		- 额外说明：
+		  - V3 API相对于ChatAnyWhere价格更加便宜，推荐购买；
+		  - V3 API支持非常多的模型，除去官方的gpt系列，claude、gemini、deepseek等模型也可以使用OpenAI的方式进行请求，仅需要更改请求体中的model；
+		  - V3 API支持当前最新的OpenAI o1 preview和o1 mini模型，尽管价格稍贵。
+		
+	[ChatAnyWhere]：https://github.com/chatanywhere/GPT_API_free
+		- 免费Key申请地址：https://api.chatanywhere.org/v1/oauth/free/github/render
 		- API地址：https://api.chatanywhere.tech/v1/chat/completions
 		- 付费API购买地址：https://buyca.shop/
-    [Free ChatGPT API]：https://github.com/popjane/free_chatgpt_api
-        - 免费Key申请地址：https://free.gpt.ge/github
-		- API地址：https://free.gpt.ge/v1/chat/completions
-		- 付费API购买地址：https://shop.gpt.ge/
-    -->
-    <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/markdown-it/12.3.2/markdown-it.min.js"></script>
-    <link rel="stylesheet"
-        href="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/github-markdown-css/5.1.0/github-markdown.min.css">
+	-->
     <style>
         /*初始化*/
         * {
@@ -129,7 +155,7 @@
             margin: 10px 5px;
             height: 40px;
             padding: 0 5px;
-            font-size: 20px;
+            font-size: 18px;
             line-height: 40px;
             border-radius: 10px;
             outline: none;
@@ -140,8 +166,9 @@
 
         .icon {
             float: left;
-            height: 90%;
+            height: 80%;
             width: auto;
+            margin-top: 5px;
         }
 
 
@@ -150,11 +177,14 @@
             float: right;
             text-decoration: none;
             height: 40px;
-            width: 100px;
+            width: 40px;
             line-height: 40px;
             text-align: center;
             margin: 10px 10px;
-            background-color: rgb(12, 170, 130);
+            background-image: url("data:image/png;base64,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");
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 100%;
             border: 0;
             border-radius: 12px;
             color: #fff;
@@ -164,13 +194,12 @@
 
         .navlink:hover,
         .navbutton:hover {
-            background-color: rgb(9, 129, 99);
-            ;
+            filter: brightness(80%);
         }
 
         .navlink:active,
         .navbutton:active {
-            background-color: rgb(5, 81, 62);
+            filter: brightness(60%);
         }
 
         /*聊天区*/
@@ -216,6 +245,11 @@
 
         p {
             margin-top: 5px;
+        }
+
+        img {
+            width: 100%;
+            height: auto;
         }
 
         h1,
@@ -421,22 +455,44 @@
             border-radius: 10px;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/sindresorhus/github-markdown-css/github-markdown.css">
     <script>
-        var historys;               // 聊天历史记录嵌套数组
+        var historys;			   // 聊天历史记录嵌套数组
         var myHeaders = new Headers();
         myHeaders.append("Authorization", "Bearer " + apikey);
         myHeaders.append("Content-Type", "application/json");
-        var cansubmit = 0;          // 是否可以提交的信号，防止用户点击多次提交按钮，导致异步出错
-        var issystem = 0;           // 是否有system prompt，会在网页加载完成后自动初始化
-        var cnt = 0;                // 网页按钮计数器
+        var cansubmit = 0;		  // 是否可以提交的信号，防止用户点击多次提交按钮，导致异步出错
+        var issystem = 0;		   // 是否有system prompt，会在网页加载完成后自动初始化
+        var cnt = 0;				// 网页按钮计数器
+        function select_model(model_name) {
+            for (i = 0; i < prompt_model_list.length; i++) {
+                if (model_name == prompt_model_list[i][0]) {
+                    return prompt_model_list[i][1]
+                }
+            }
+            return model_name
+        }
+        function select_prompt(model_name, prompts) {
+            for (i = 0; i < prompt_model_list.length; i++) {
+                if (model_name == prompt_model_list[i][0]) {
+                    return prompt_model_list[i][2]
+                }
+            }
+            return prompts
+        }
         function cleanhistory() {
             var model = document.getElementById("model").value;
             historys = [];
             cnt = 0;
-            if (system_prompt != "") {
+            selected_prompt = select_prompt(model, system_prompt)
+            if (selected_prompt != null) {
                 cnt++;
                 issystem = 1;
-                historys.push({ 'role': 'system', 'content': system_prompt })
+                historys.push({ 'role': 'system', 'content': selected_prompt })
+            }
+            else {
+                issystem = 0;
             }
             cansubmit = 1;
             document.getElementsByClassName('chat-container')[0].innerHTML = '';
@@ -492,7 +548,7 @@
             gpt_content.innerText = "正在思考中，请稍后……";
 
             raw = JSON.stringify({
-                'model': document.getElementById('model').value,
+                'model': select_model(document.getElementById('model').value),
                 'messages': historys
             });
             //组装、发送请求
@@ -555,7 +611,7 @@
             if (cansubmit == 0) {
                 return 0;
             }
-            historys = historys.slice(0, i + issystem);
+            historys = historys.slice(0, i);
             rows = document.getElementsByClassName('row');
             len = rows.length;
             for (c = len - 1; c >= i - issystem; c--) {
@@ -565,7 +621,7 @@
             chat();
         }
         function user_withdraw(i) {
-            historys = historys.slice(0, i + issystem);
+            historys = historys.slice(0, i);
             rows = document.getElementsByClassName('row');
             len = rows.length;
             console.log(len + "长度");
@@ -602,8 +658,8 @@
                     d="M845.610667 188.757333a25.6 25.6 0 0 0-36.224-36.181333l-83.242667 83.242667a344.021333 344.021333 0 0 0-202.282667-65.365334h-23.722666c-74.24 0-143.061333 23.466667-199.381334 63.274667L219.562667 152.576a25.6 25.6 0 1 0-36.181334 36.181333l77.696 77.738667a344.618667 344.618667 0 0 0-106.538666 249.6v135.082667a281.6 281.6 0 0 0 281.6 281.6h151.722666a281.6 281.6 0 0 0 281.6-281.6v-135.125334c0-96.853333-39.850667-184.362667-104.021333-247.125333l80.128-80.170667zM205.738667 516.053333a294.4 294.4 0 0 1 294.4-294.4h23.722666a294.4 294.4 0 0 1 294.4 294.4v135.125334a230.4 230.4 0 0 1-230.4 230.4h-151.722666a230.4 230.4 0 0 1-230.4-230.4v-135.125334z m-94.805334 10.154667a25.6 25.6 0 0 0-51.2 0v165.973333a25.6 25.6 0 1 0 51.2 0v-165.973333z m827.733334-25.6a25.6 25.6 0 0 1 25.6 25.6v165.973333a25.6 25.6 0 1 1-51.2 0v-165.973333a25.6 25.6 0 0 1 25.6-25.6z m-231.509334-7.594667c0 48.810667-35.157333 83.797333-73.216 83.797334h-247.04c-38.058667 0-73.216-34.986667-73.216-83.754667v-27.349333c0-32.426667 20.522667-58.837333 58.666667-78.549334 38.229333-19.712 89.514667-29.866667 138.069333-29.866666 48.512 0 99.84 10.154667 138.026667 29.866666 38.144 19.712 58.709333 46.165333 58.709333 78.506667v27.392z m-73.216 134.997334c71.082667 0 124.416-62.933333 124.416-134.954667v-27.349333c0-59.050667-39.125333-99.626667-86.4-124.032-47.232-24.405333-107.093333-35.584-161.536-35.584-54.442667 0-114.346667 11.178667-161.536 35.584-47.274667 24.405333-86.4 64.981333-86.4 124.032v27.306666c0 72.064 53.333333 134.997333 124.416 134.997334h247.04z m-65.28-149.76a41.002667 41.002667 0 1 0 82.048 0 41.002667 41.002667 0 0 0-82.005333 0z m-157.653333 41.045333a41.002667 41.002667 0 1 1 0-82.005333 41.002667 41.002667 0 0 1 0 82.005333z"
                     fill="#66696C" p-id="5540"></path>
             </svg>
-            <select name="llm-select no-select" id="model"></select>
-            <div class="navbutton no-select" onclick="cleanhistory()">清空聊天</div>
+            <select name="llm-select no-select" id="model" onchange="cleanhistory()"></select>
+            <div class="navbutton no-select" onclick="cleanhistory()"></div>
         </div>
         <div class="chat-container"></div>
         <div class="input-container">
