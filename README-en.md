@@ -60,6 +60,16 @@ This repository was published on Github platform on 2025-02-17.
 >
 > Optimized webpage display.
 
+**5.0**
+
+> 2025-02-25
+>
+> Added support for Mermaid charts
+>
+> Change the markdown rendering library to markdown-it
+>
+> Fixed some streaming response bugs
+
 ## Quick Start
 
 ### Prerequisites

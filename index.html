@@ -18,6 +18,8 @@
             ["gpt-4o", "GPT-4o"],
             ["o1-mini", "GPT o1 mini"],
             ["o1-sim", "[+]Claude思维链"],
+            ["deepseek-v3", "Deepseek V3"],
+            ["deepseek-r1", "Deepseek R1"],
             ["sonar-reasoning", "Perplexity 搜索"],
             ["claude-3-5-sonnet-20241022", "Claude-3.5"],
             ["gemini-1.5-pro-latest", "Gemini 1.5"],
@@ -34,7 +36,7 @@
 
         // 使用额外变量保存的prompt。请注意，prompt两边使用单引号进行引用，因此内部的文本出现的单引号需要转义。
         var o1_prompt = '# 语言: zh-CN\n# 用途: 逐步解释推理过程，输出为 Markdown 格式\n\ndef 分析助理():\n    """你是一个擅长逐步解释推理过程的AI助手"""\n    return {\n        "风格": ["理性", "细致", "批判性思维"],\n        "擅长": "多步骤推理",\n        "输出格式": "Markdown"\n    }\n\nclass 推理助手(输入):\n    def __init__(self, 输入):\n        self.状态 = "确认用户问题" # 初始化第1步\n        self.输入 = 输入\n\n    def 逐步推理(self):\n        """你会逐步解释每一步的推理过程并提供结论"""\n        \n        def 标题(状态):\n            """为每一步推理生成标题，包含对替代答案的探索。考虑你可能出错的情况，以及如果推理错误，错误可能出现在哪里。"""\n            return 标题\n\n        def 内容描述(状态, 输入):\n            """进行认真细致的推理，注意你作为llm的局限性以及你能做什么和不能做什么。使用最佳实践。"""\n            return 推理过程\n\n        def 决定下一步(状态, 输入, 当前步骤):\n            """根据状态、输入和当前步骤动态决定下一步"""\n            # 至少要有 3 步推理\n            if 当前步骤 >= 3 and 是否可以得出结论(状态, 输入) or 当前步骤 >=  8: \n                return "最终结论"\n            else:\n                return 生成下一步(状态, 输入)\n\n        def 是否可以得出结论(状态, 输入):\n            """判断是否已经可以得出结论"""\n            return True or False\n\n        def 生成下一步(状态, 输入):\n            """根据输入和当前推理步骤生成下一步推理"""\n            return 下一步推理\n\n        当前步骤 = 0\n        \n        md_output = "# 推理过程\n"\n        while self.状态 != "最终结论":\n            当前步骤 += 1\n            next_action = 决定下一步(self.状态, self.输入, 当前步骤)\n            \n            md_output += f"## 步骤: {标题(self.状态)}\n"\n            md_output += f"- **内容**: {内容描述(self.状态, self.输入)}\n"\n            if next_action != "最终结论":\n                md_output += f"- **下一步**: {next_action}\n\n"\n            \n            self.状态 = next_action\n        \n        return md_output\n\ndef start():\n    """启动时运行"""\n    system_role = 分析助理()\n    输入 = input()\n    助手 = 推理助手(输入)\n    结果 = 助手.逐步推理()\n\n    print(结果)\n\n\nif __name__ == "__main__":\n    start()\n\n# 请按照伪代码的规则运行，直接执行 main。**不要尝试解释代码**';
-        
+
         // 配置prompt，第一列是你为模型命的名（即llm_selection即第一列的内容），第二列是真实使用的模型，第三列是提示词变量名。
         var prompt_model_list = [
             ["o1-sim", "claude-3-5-sonnet-20241022", o1_prompt],
@@ -283,6 +285,10 @@
             color: #fff;
         }
 
+        mjx-container {
+            overflow: auto;
+        }
+
         .row {
             width: 100%;
         }
@@ -484,7 +490,7 @@
         }
     </style>
     <!-- Markdown 依赖库 -->
-    <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/marked/4.0.2/marked.min.js"></script>
+    <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/markdown-it/12.3.2/markdown-it.min.js"></script>
     <link rel="stylesheet"
         href="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/github-markdown-css/5.1.0/github-markdown.min.css">
     <!-- LaTeX 依赖库 -->
@@ -528,7 +534,7 @@
     </script>
     <script id="MathJax-script" async
         src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/mathjax/3.2.0/es5/tex-chtml.min.js"></script>
-
+    <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/mermaid/8.14.0/mermaid.min.js"></script>
     <script>
         var historys;			   // 聊天历史记录嵌套数组
         var myHeaders = new Headers();
@@ -616,6 +622,8 @@
                 }
             };
             customElements.define('think-box', Think);
+            //配置mermaid
+            mermaid.initialize({ startOnLoad: false, theme: 'neutral' })
             //根据用户配置显示开屏提示
             if (isinfo == 1) { document.getElementById('infocard').style.display = 'block'; }
             //根据用户配置更改全局字体
@@ -627,8 +635,36 @@
             const output = input.replace(regex, (match) => `$${match}$`);
             return output;
         }
-        function md2html(md) {
-            return marked.parse(md.replace(/\$(.*?)\$/g, '%%MATHJAX:$1$%%')).replace(/%%MATHJAX:(.*?)%%/g, '$1');
+        function md2html(md_content) {
+            // md_content = md_content.replace(/\$(.*?)\$/g, '%%MATHJAX:$1$%%')
+            const md = window.markdownit();
+            var htmlString = md.render(md_content);
+            // htmlString = htmlString.replace(/%%MATHJAX:(.*?)%%/g, '$1');
+            return htmlString;
+        }
+        function md2html_all(md_content) {
+            md_content = md_content.replace(/\$(.*?)\$/g, '%%MATHJAX:$1$%%')
+            const md = window.markdownit();
+            md.use(function (md) {
+                const defaultRenderer = md.renderer.rules.fence;
+                md.renderer.rules.fence = function (tokens, idx, options, env, self) {
+                    const token = tokens[idx];
+                    const code = token.content.trim();
+                    const lang = token.info.trim();
+                    if (lang === 'mermaid') {
+                        try {
+                            const svg = mermaid.render('mermaid-' + idx, code);
+                            return `<div class="mermaid">${svg}</div>`;
+                        } catch (error) {
+                            return `<pre>Error rendering Mermaid diagram: ${error.message}</pre>`;
+                        }
+                    }
+                    return defaultRenderer(tokens, idx, options, env, self);
+                };
+            });
+            var htmlString = md.render(md_content);
+            htmlString = htmlString.replace(/%%MATHJAX:(.*?)%%/g, '$1');
+            return htmlString;
         }
 
         function chat() {
@@ -653,105 +689,112 @@
             };
             if (stream == false) {
                 fetch(api, requestOptions)
-                .then(response => response.json())
-                .then(result => {
-                    if (result.hasOwnProperty("error")) {
-                        gpt_content.innerText = "请求出现错误，错误信息：\n" + result.error.code + "\n" + result.error.message + "\n请稍候点击[清空聊天]后重试。";
-                        return 0;
-                    }
-                    msg = result.choices[0].message;
-                    gpt_msg = msg.content;
-                    if (msg?.reasoning_content) {
-                        gpt_thinking_msg = msg.reasoning_content;
-                    }
-                    historys.push({ "role": "assistant", "content": gpt_msg });
-                    gpt_msg_md = md2html(gpt_msg);
-                    if (msg?.reasoning_content) {
-                        gpt_thinking_msg_md = md2html(gpt_thinking_msg);
-                        gpt_content.innerHTML = '<label for="toggle' + String(cnt - 1) + '" class="toggle-label">深度思考详情</label><input type="checkbox" id="toggle' + String(cnt - 1) + '" class="toggle-checkbox"><think-box class="dropdown-content">' + gpt_thinking_msg_md + '<br></think-box>' + gpt_msg_md;
-                    } else {
-                        gpt_content.innerHTML = gpt_msg_md;
-                    }
-                    MathJax.typeset();
-                    gpt_content.innerHTML = boxed(gpt_content.innerHTML);
-                    MathJax.typeset();
-                    cansubmit = 1;
-                    const rows = document.querySelectorAll('.row');
-                    rows.forEach(row => {
-                        const links = row.querySelectorAll('a');
-                        links.forEach(link => {
-                            link.target = '_blank';
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.hasOwnProperty("error")) {
+                            gpt_content.innerText = "响应出现错误，错误信息：\n" + result.error.code + "\n" + result.error.message + "\n请稍候点击[清空聊天]后重试。";
+                            return 0;
+                        }
+                        msg = result.choices[0].message;
+                        gpt_msg = msg.content;
+                        if (msg?.reasoning_content) {
+                            gpt_thinking_msg = msg.reasoning_content;
+                        }
+                        historys.push({ "role": "assistant", "content": gpt_msg });
+                        gpt_msg_md = md2html_all(gpt_msg);
+                        if (msg?.reasoning_content) {
+                            gpt_thinking_msg_md = md2html(gpt_thinking_msg);
+                            gpt_content.innerHTML = '<label for="toggle' + String(cnt - 1) + '" class="toggle-label">深度思考详情</label><input type="checkbox" id="toggle' + String(cnt - 1) + '" class="toggle-checkbox"><think-box class="dropdown-content">' + gpt_thinking_msg_md + '<br></think-box>' + gpt_msg_md;
+                        } else {
+                            gpt_content.innerHTML = gpt_msg_md;
+                        }
+                        MathJax.typeset();
+                        gpt_content.innerHTML = boxed(gpt_content.innerHTML);
+                        MathJax.typeset();
+
+                        cansubmit = 1;
+                        const rows = document.querySelectorAll('.row');
+                        rows.forEach(row => {
+                            const links = row.querySelectorAll('a');
+                            links.forEach(link => {
+                                link.target = '_blank';
+                            });
                         });
+                    })
+                    .catch(error => {
+                        gpt_content.innerText = "请求出现错误，错误信息：\n" + error + "\n请稍候点击[清空聊天]后重试。";
                     });
-                })
-                .catch(error => {
-                    console.log(error);
-                });
             } else {
                 fetch(api, requestOptions)
-                .then(response => {
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder('utf-8');
-                    var gpt_msg = '';
-                    var gpt_thinking_msg = '';
-                    var is_reasoning_model = 0;
+                    .then(response => {
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder('utf-8');
+                        var gpt_msg = '';
+                        var gpt_thinking_msg = '';
+                        var is_reasoning_model = 0;
 
-                    function processChunk({ done, value }) {
-                        if (done) {
-                            return { gpt_msg, gpt_thinking_msg, is_reasoning_model}; // 返回对象
-                        }
-                        const chunk = decoder.decode(value, { stream: true });
-                        const lines = chunk.split('\n').filter(line => line.trim() !== '');
+                        function processChunk({ done, value }) {
+                            if (done) {
+                                return { gpt_msg, gpt_thinking_msg, is_reasoning_model }; // 返回对象
+                            }
+                            const chunk = decoder.decode(value, { stream: true });
+                            const lines = chunk.split('\n').filter(line => line.trim() !== '');
 
-                        lines.forEach(line => {
-                            const data = line.replace(/^data: /, '');
-                            if (data === '[DONE]') { return; }
-                            else {
-                                const json = JSON.parse(data);
-                                if (Object.keys(json.choices[0].delta).length === 0) { return; }
-                                const content = json.choices[0].delta.content;
-                                if (json.choices[0].delta?.reasoning_content) {
-                                    const reasoning_content = json.choices[0].delta.reasoning_content;
-                                    is_reasoning_model = 1;
-                                    if (reasoning_content !== null){gpt_thinking_msg += reasoning_content;}
-                                }
-                                if (content !== null){gpt_msg += content;}
-                                // console.log(content);
-                                if (gpt_msg !== '' | gpt_thinking_msg !== '') {
-                                    if (is_reasoning_model == 1) {
-                                        gpt_content.innerHTML = '<label for="toggle' + String(cnt - 1) + '" class="toggle-label">深度思考详情</label><input type="checkbox" id="toggle' + String(cnt - 1) + '" class="toggle-checkbox"><think-box class="dropdown-content">' + marked.parse(gpt_thinking_msg) + '<br></think-box>' + marked.parse(gpt_msg);
-                                    } else {
-                                        gpt_content.innerHTML = marked.parse(gpt_msg);
+                            lines.forEach(line => {
+                                const data = line.replace(/^data: /, '');
+                                if (data === '[DONE]') { return; }
+                                else {
+                                    const json = JSON.parse(data);
+                                    if (
+                                        (Array.isArray(json.choices) && !json.choices) || // 检查是否为空数组
+                                        (json.choices && json.choices[0] && !json.choices[0].delta) // 检查 delta 是否为空对象
+                                    ) {
+                                        return;
+                                    }
+                                    const content = json.choices[0].delta.content;
+                                    if (json.choices[0].delta?.reasoning_content) {
+                                        const reasoning_content = json.choices[0].delta.reasoning_content;
+                                        is_reasoning_model = 1;
+                                        if (reasoning_content !== null) { gpt_thinking_msg += reasoning_content; }
+                                    }
+                                    if (content !== null) { gpt_msg += content; }
+                                    // console.log(content);
+                                    if (gpt_msg !== '' || gpt_thinking_msg !== '') {
+                                        if (is_reasoning_model == 1) {
+                                            gpt_content.innerHTML = '<label for="toggle' + String(cnt - 1) + '" class="toggle-label">深度思考详情</label><input type="checkbox" id="toggle' + String(cnt - 1) + '" class="toggle-checkbox"><think-box class="dropdown-content">' + md2html(gpt_thinking_msg) + '<br></think-box>' + md2html(gpt_msg);
+                                        } else {
+                                            gpt_content.innerHTML = md2html(gpt_msg);
+                                        }
                                     }
                                 }
-                            }
+                            });
+                            return reader.read().then(processChunk); // 继续读取下一个块
+                        }
+                        return reader.read().then(processChunk); // 开始读取
+                    })
+                    .then(({ gpt_msg, gpt_thinking_msg, is_reasoning_model }) => {
+                        cansubmit = 1;
+                        historys.push({ "role": "assistant", "content": gpt_msg });
+                        const rows = document.querySelectorAll('.row');
+                        rows.forEach(row => {
+                            const links = row.querySelectorAll('a');
+                            links.forEach(link => {
+                                link.target = '_blank';
+                            });
                         });
-                        return reader.read().then(processChunk); // 继续读取下一个块
-                    }
-                    return reader.read().then(processChunk); // 开始读取
-                })
-                .then(({ gpt_msg, gpt_thinking_msg, is_reasoning_model}) => {
-                    cansubmit = 1;
-                    historys.push({ "role": "assistant", "content": gpt_msg });
-                    const rows = document.querySelectorAll('.row');
-                    rows.forEach(row => {
-                        const links = row.querySelectorAll('a');
-                        links.forEach(link => {
-                            link.target = '_blank';
-                        });
-                    });
-                    if (is_reasoning_model == 1) {
-                        gpt_content.innerHTML = '<label for="toggle' + String(cnt - 1) + '" class="toggle-label">深度思考详情</label><input type="checkbox" id="toggle' + String(cnt - 1) + '" class="toggle-checkbox"><think-box class="dropdown-content">' + marked.parse(gpt_thinking_msg) + '<br></think-box>' + marked.parse(gpt_msg);
-                    } else {
-                        gpt_content.innerHTML = marked.parse(gpt_msg);
-                    }
-                    MathJax.typeset();
-                    gpt_content.innerHTML = boxed(gpt_content.innerHTML);
-                    MathJax.typeset();
-                })
-                .catch(error => {
-                    console.error('Fetch error:', error);
-                });
+                        if (is_reasoning_model == 1) {
+                            gpt_content.innerHTML = '<label for="toggle' + String(cnt - 1) + '" class="toggle-label">深度思考详情</label><input type="checkbox" id="toggle' + String(cnt - 1) + '" class="toggle-checkbox"><think-box class="dropdown-content">' + md2html(gpt_thinking_msg) + '<br></think-box>' + md2html_all(gpt_msg);
+                        } else {
+                            gpt_content.innerHTML = md2html_all(gpt_msg);
+                        }
+                        MathJax.typeset();
+                        gpt_content.innerHTML = boxed(gpt_content.innerHTML);
+                        MathJax.typeset();
+                    })
+                    // .catch(error => {
+                    //     gpt_content.innerText = "请求出现错误，错误信息：\n" + error + "\n请稍候点击[清空聊天]后重试。";
+                    // })
+                    ;
             }
         }
         function checkForMarkdown(text) {
