@@ -2,7 +2,7 @@
 
 [[License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[中文|[English](README-en.md)]
+[[中文](README.md)|English]
 
 A lightweight, single-file HTML web client for ChatGPT that implements intelligent conversation features using the OpenAI API.
 
