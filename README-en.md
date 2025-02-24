@@ -1,186 +1,124 @@
 # Single-ChatGPT-Web
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[[License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[[中文](README.md)|English]
+[中文|[English](README-en.md)]
 
-A lightweight single-file HTML version of ChatGPT web client, utilizing the OpenAI API for intelligent conversation features.
-This page is translated using ChatGPT. Please forgive me if there is any inappropriateness.
+A lightweight, single-file HTML web client for ChatGPT that implements intelligent conversation features using the OpenAI API.
 
 ## Features
 
-- Simple chat interface design with support for conversational context
-- Ultra-small single file of only 88KB, zero-dependency deployment (only relies on files from ByteDance CDN for rendering md and tex)
-- Markdown rendering based on `marked.js` and `github-markdown.css` (ByteDance CDN)
-- LaTeX formula rendering based on MathJax (ByteDance CDN)
-- Uses base64-encoded images embedded in the HTML file
-- Display adaptation for Deepseek deep thinking content
-- Responsive layout (supports both PC and mobile access)
+- Simple chat interface design with support for continuous conversation context.
+- Ultra-small single file of only 88KB with zero dependencies (depends on ByteDance CDN's online files for rendering md and tex).
+- Markdown format rendering based on `marked.js` and `github-markdown.css` (ByteDance CDN).
+- LaTeX formula rendering based on MathJax (ByteDance CDN).
+- Embeds images encoded in base64 directly into the HTML file.
+- Display adaptation for Deepseek's deep thinking content.
+- Responsive layout (supports access from PCs and mobile devices).
 
 ## Changelog
 
-This repository was released on the GitHub platform on 2025-02-17.
+This repository was published on Github platform on 2025-02-17.
 
 **1.0**
 
 > 2024-08-13
 >
-> Webpage release
+> Webpage released.
 >
-> Webpage supports Markdown rendering using the markdown-it library
+> The webpage supports rendering Markdown using markdown-it library.
 
 **2.0**
 
 > 2024-09-20
 >
-> Added support for multiple prompts, fixed some bugs
+> Added support for multiple prompt words and fixed some bugs.
 >
-> Improved overall webpage layout
+> Optimized overall webpage layout.
 
 **3.0**
 
 > 2025-02-17
 >
-> Added support for displaying Deepseek-R1 deep thinking content (please use an interface supporting reasoning_content for Q&A)
+> Added support for temperature settings.
 >
-> Added support for LaTeX formula rendering
+> Added display support for Deepseek-R1 deep thinking content (please use an interface supporting reasoning_content for Q&A).
 >
-> Changed the markdown library to marked.js
+> Added LaTeX formula rendering support.
 >
-> Changed CDN source to ByteDance CDN. The original jsDelivery is not usable within China.
+> Switched Markdown library to marked.js.
+>
+> Changed CDN source to ByteDance CDN due to jsDelivery being inaccessible within China.
+
+**4.0**
+
+> 2025-02-24
+>
+> Added support for streaming responses.
+>
+> Added streaming display support for Deepseek-R1 deep thinking content.
+>
+> Optimized webpage display.
 
 ## Quick Start
 
-### Preparation
-#### ① Obtain BASE_URL and API_KEY of an interface supporting OpenAI's official protocol
-This project does not provide interface proxy services. If you need to use OpenAI's official interface, please use a VPN on your computer.
+### Prerequisites
+#### Obtain BASE_URL and API_KEY for interfaces supporting the official OpenAI protocol.
 
-> Below are some third-party API websites supporting OpenAI request protocol, you may choose at your discretion.
-> 
-> These are merely recommendations, and stability is not guaranteed, nor is there any responsibility for their actions.
-> 
-> All of the following content is provided for people in China. If you can directly access the OpenAI API in your region, you can skip to the configuration step without performing the following steps.
+> This project does not provide an interface proxy service. If you need to use the official OpenAI interface, please set up your own proxy.
 
-----------
+You need to acquire a BASE_URL like `https://api.openai.com/v1/chat/completions` and an API_KEY like `sk-xxxxxx`.
 
-**[Recommendation] V3 API**
+Then modify the webpage source code according to the configuration instructions below.
 
-Free trial: [Github page](https://github.com/popjane/free_chatgpt_api) (requires a GitHub account) (API endpoints differ for free and paid keys, please modify accordingly)
-
-Free API endpoint: `https://free.gpt.ge/v1/chat/completions`
-
-Paid API endpoint: `https://api.vveai.com/v1/chat/completions`
-
-Link: [V3 API Registration Official Site](https://api.v3.cm/register?aff=TVyz)
-
-Features:
-
-- all in one, providing all products via OpenAI protocol API, supporting almost all mainstream models, contents include:
-  - Overseas: OpenAI series, Claude series, Gemini series, Grok, Perplexity
-  - Domestic: Deepseek, Qianfan, Zhipu, Qwen, Spark, Moonshot, Doubao...
-  - Drawing: Midjourney, Stable Diffusion, Flux
-  - Video: Keling, Luma, Runway, Pika
-  - Others: Suno Music, Digital Human Video, AIPPT
-- Official forwarding + some reversal, direct connection in China without need for VPN to use all models.
-- Includes multiple adaptation websites. Please check "Token Management" page yourself.
-- Pay-as-you-go, use as much as you top up, balance never expires.
-- Relatively inexpensive pricing.
-
-----------
-
-**ChatAnyWhere**
-
-Free trial: [Github page](https://github.com/chatanywhere/GPT_API_free) (requires a GitHub account older than 7 days)
-
-API endpoint: `https://api.chatanywhere.tech/v1/chat/completions`
-
-Link: [ChatAnyWhere Purchase Page](https://api.chatanywhere.tech/#/shop/)
-
-Features: OpenAI series API, stable, slightly expensive. Free tokens have only daily limits, supporting gpt-3.5-turbo and gpt-4o-mini
-
--------------
-
-**[Free] Github Marketspace**
-
-Details page: [Github Marketplace](https://github.com/marketplace)
-
-Create Token: [Fine-grained Tokens](https://github.com/settings/personal-access-tokens)
-
-API endpoint: `https://models.inference.ai.azure.com/chat/completions` (note, no v1)
-
-Features: gpt-4o and deepseek-r1 are completely free, with only daily limits
-
-----------
-
-#### ② (Optional) Prepare a virtual host and a matching domain
-
-If you want this site to be available for people around you, then this step is optional, otherwise, it is not needed.
-
-This website's API KEY is hardcoded into the front-end HTML file, **do not** share this site publicly, otherwise, it **will** definitely lead to API KEY abuse.
-
----------------
-
-**[Free] Xiaro Public Welfare Host**
-
-Link: [Xiaro Host Registration](https://developer.user.api.apii.cn/user/register.html)
-
-Features: Direct registration gives you a host, no pitfalls. You need to purchase a domain yourself.
-
--------------
-
-**[Low-Cost] Xingchen Yun Host**
-
-Link: [Xingchen Yun Registration](https://starxn.com/aff/BZMELGNG)
-
-Explanation: Low-cost stable virtual host. You need to purchase a domain yourself.
-
-----------
+If you do not have an existing third-party interface service provider, you can check out recommended providers by the author [here](Recommend_API_Server.md).
 
 ### Usage Steps
 1. Clone this repository or download the `index.html` file;
 
 2. Open the `index.html` file in a text editor;
 
-3. Modify the configuration of the file, specific modifications can be referred to in the "Configuration Options" section below;
+3. Modify the configuration of the file as per the "Configuration Options" section below;
 
-4. Save the file and run it using one of the following methods:
-- (Recommended) Directly double-click to open (Note: If the API endpoint is local, you need to disable the browser's CORS restriction)
+4. Save the file and run it in one of the following ways:
+- (Recommended) Simply double-click to open (Note: If the API endpoint is local, you'll need to disable browser CORS cross-origin restrictions)
 
-- Use Python's local server to provide access to the local network (Note: Allow Python through the firewall):
+- Use Python's local server for LAN access (Note: Allow Python through the firewall):
  ```bash
  python3 -m http.server 8000
  ```
- Then access `http://localhost:8000`
+ Then visit `http://localhost:8000`
 
-- Use remote virtual host to provide access to the internet:
+- Provide public network access using a remote virtual host:
 
-  - Upload the configured file to the remote virtual host
-  - Configure domain parsing, configure the domain directory
+  - Upload the configured file to a remote virtual host;
+  - Configure domain resolution and directory;
   - Access the configured domain to use.
 
 ## Configuration Options
 
-In line 9 of the file, modifiable configuration parameters:
+On line 9 of the file, modifiable configuration parameters include:
 
 ```javascript
-// API configuration
+// API Configuration
 var api = "https://api.openai.com/v1/chat/completions"; // Your API endpoint
-var apikey = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxx"; // Your API-key
+var apikey = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxx"; // Your API key
 
 var system_prompt = null; // System prompt, can be left empty
-var temperature = 0.9 // Model temperature, the higher it is, the more creative the model, and the more random the output. This setting is invalid for Deepseek-R1.
+var temperature = 0.9 // Model temperature, higher values increase creativity and randomness of output. This setting has no effect on Deepseek-R1.
+var stream = false // Whether to use streaming output.
 var llm_selection = [
     ["gpt-4o", "OpenAI GPT 4o"],
     ["first-prompt", "Test Prompt"],
-]; // API available model configuration, for each row, the first is the model code, the second is the display content in the dropdown menu. Note the comma at the end of the array.
+]; // Available models configuration for API, first item in each row is the model code, second is what will show in the dropdown menu. Note trailing commas in arrays.
 
-// Webpage configuration
-var isinfo = 1;// Whether there is an opening screen prompt information
-var webFontFamily = "华文中宋, 微软雅黑, 楷体";// Global font for the webpage, multiple fonts separated by commas, priority from left to right
+// Webpage Configuration
+var isinfo = 1;// Whether to show initial informational message
+var webFontFamily = "STZhongSong, Microsoft YaHei, KaiTi";// Global font family for the webpage, separated by English commas, with priority given to earlier fonts.
 
-// Prompt configuration
+// Prompt Configuration
 var test_prompt = "You are a helpful assistant.";
-// Configure prompt, the first column is the name you give to the model (i.e., the first column in llm_selection), the second column is the actual model used, third column is the prompt variable name. The prompt configured here will override system_prompt.
+// Configure prompts, the first column is the name you give the model (the first column content in llm_selection), the second column is the actual model used, the third column is the prompt variable name. Prompts configured here will override system_prompt.
 var prompt_model_list = [
     ["first-prompt", "gpt-4o", test_prompt],
 ]
@@ -188,12 +126,10 @@ var prompt_model_list = [
 
 ## FAQ
 
-❓ **How to obtain the API key?**  
-Visit OpenAI's [API Keys Management Page](https://platform.openai.com/account/api-keys) to create a new key
-
 ❓ **How to save chat history?**  
-The current version does not perform any local storage of records, closing the browser, or refreshing the page will cause history loss
+The current version does not store any records locally, so closing the browser or refreshing the page will lose history. 
+If you need to export chat history, press F12 to open the browser's developer tools, go to the "Console" tab, type "historys", press enter, and copy the returned content. 
 
-## Demonstration
+## Screenshots
 
-![Project Screenshot](doc/img/screenshot1.png)
+[Project Screenshot](doc/img/screenshot1.png)

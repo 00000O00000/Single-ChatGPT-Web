@@ -12,6 +12,8 @@
 
         var system_prompt = null; // 系统提示词，可留空
         var temperature = 0.9 // 模型温度，越高模型的创造力就越高，输出越随机。此配置对Deepseek-R1无效。
+        var stream = true; // 是否使用流式输出。
+
         var llm_selection = [
             ["gpt-4o", "GPT-4o"],
             ["gpt-4o-mini", "GPT-4o-mini"],
@@ -195,14 +197,9 @@
             cursor: default;
         }
 
-        .navlink:hover,
-        .navbutton:hover {
-            filter: brightness(80%);
-        }
-
         .navlink:active,
         .navbutton:active {
-            filter: brightness(60%);
+            filter: brightness(70%);
         }
 
         /*聊天区*/
@@ -347,10 +344,6 @@
             background-size: contain;
         }
 
-        .msg-copy:hover {
-            background-color: #aaa;
-        }
-
         .msg-copy:active {
             background-color: #777;
         }
@@ -368,10 +361,6 @@
             background-position: 0;
             background-repeat: no-repeat;
             background-size: contain;
-        }
-
-        .msg-withdraw:hover {
-            background-color: #aaa;
         }
 
         .msg-withdraw:active {
@@ -419,17 +408,13 @@
             border-radius: 10px;
         }
 
-        .toggle-label:hover {
-            background-color: #c3c3c3;
-        }
-
         think-box {
             display: block;
         }
 
         /* 定义内容区域的样式 */
         .dropdown-content {
-            max-height: 0;
+            max-height: 100000px;
             overflow: hidden;
             transition: max-height 0.6s ease;
             padding: 0 10px;
@@ -441,7 +426,7 @@
 
         /* 当checkbox被选中时，显示内容 */
         .toggle-checkbox:checked+.dropdown-content {
-            max-height: 100000px;
+            max-height: 0;
             /* 设置足够高的高度以显示内容 */
         }
 
@@ -485,10 +470,6 @@
             font-size: 20px;
             cursor: default;
 
-        }
-
-        .submitbutton:hover {
-            background-color: rgb(9, 129, 99);
         }
 
         .submitbutton:active {
@@ -667,7 +648,8 @@
             raw = JSON.stringify({
                 'model': select_model(document.getElementById('model').value),
                 'messages': historys,
-                'temperature': temperature
+                'temperature': temperature,
+                'stream': stream
             });
             //组装、发送请求
             var requestOptions = {
@@ -676,7 +658,8 @@
                 body: raw,
                 redirect: 'follow'
             };
-            fetch(api, requestOptions)
+            if (stream == false) {
+                fetch(api, requestOptions)
                 .then(response => response.json())
                 .then(result => {
                     if (result.hasOwnProperty("error")) {
@@ -699,7 +682,6 @@
                     MathJax.typeset();
                     gpt_content.innerHTML = boxed(gpt_content.innerHTML);
                     MathJax.typeset();
-
                     cansubmit = 1;
                     const rows = document.querySelectorAll('.row');
                     rows.forEach(row => {
@@ -712,6 +694,72 @@
                 .catch(error => {
                     console.log(error);
                 });
+            } else {
+                fetch(api, requestOptions)
+                .then(response => {
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder('utf-8');
+                    var gpt_msg = '';
+                    var gpt_thinking_msg = '';
+                    var is_reasoning_model = 0;
+
+                    function processChunk({ done, value }) {
+                        if (done) {
+                            return { gpt_msg, gpt_thinking_msg, is_reasoning_model}; // 返回对象
+                        }
+                        const chunk = decoder.decode(value, { stream: true });
+                        const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+                        lines.forEach(line => {
+                            const data = line.replace(/^data: /, '');
+                            if (data === '[DONE]') { return; }
+                            else {
+                                const json = JSON.parse(data);
+                                if (Object.keys(json.choices[0].delta).length === 0) { return; }
+                                const content = json.choices[0].delta.content;
+                                if (json.choices[0].delta?.reasoning_content) {
+                                    const reasoning_content = json.choices[0].delta.reasoning_content;
+                                    is_reasoning_model = 1;
+                                    if (reasoning_content !== null){gpt_thinking_msg += reasoning_content;}
+                                }
+                                if (content !== null){gpt_msg += content;}
+                                // console.log(content);
+                                if (gpt_msg !== '' | gpt_thinking_msg !== '') {
+                                    if (is_reasoning_model == 1) {
+                                        gpt_content.innerHTML = '<label for="toggle' + String(cnt - 1) + '" class="toggle-label">深度思考详情</label><input type="checkbox" id="toggle' + String(cnt - 1) + '" class="toggle-checkbox"><think-box class="dropdown-content">' + marked.parse(gpt_thinking_msg) + '<br></think-box>' + marked.parse(gpt_msg);
+                                    } else {
+                                        gpt_content.innerHTML = marked.parse(gpt_msg);
+                                    }
+                                }
+                            }
+                        });
+                        return reader.read().then(processChunk); // 继续读取下一个块
+                    }
+                    return reader.read().then(processChunk); // 开始读取
+                })
+                .then(({ gpt_msg, gpt_thinking_msg, is_reasoning_model}) => {
+                    cansubmit = 1;
+                    historys.push({ "role": "assistant", "content": gpt_msg });
+                    const rows = document.querySelectorAll('.row');
+                    rows.forEach(row => {
+                        const links = row.querySelectorAll('a');
+                        links.forEach(link => {
+                            link.target = '_blank';
+                        });
+                    });
+                    if (is_reasoning_model == 1) {
+                        gpt_content.innerHTML = '<label for="toggle' + String(cnt - 1) + '" class="toggle-label">深度思考详情</label><input type="checkbox" id="toggle' + String(cnt - 1) + '" class="toggle-checkbox"><think-box class="dropdown-content">' + marked.parse(gpt_thinking_msg) + '<br></think-box>' + marked.parse(gpt_msg);
+                    } else {
+                        gpt_content.innerHTML = marked.parse(gpt_msg);
+                    }
+                    MathJax.typeset();
+                    gpt_content.innerHTML = boxed(gpt_content.innerHTML);
+                    MathJax.typeset();
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                });
+            }
         }
         function checkForMarkdown(text) {
             if (markdownRegex.test(text)) {
@@ -773,6 +821,9 @@
                 rows[c].remove();
             }
             cnt = i;
+        }
+        function changeModel() {
+            document.getElementById('f_sha1').innerHTML = document.getElementById('f_sha1').innerHTML;
         }
     </script>
 </head>
