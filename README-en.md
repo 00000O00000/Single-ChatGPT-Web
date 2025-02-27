@@ -80,6 +80,14 @@ This repository was published on Github platform on 2025-02-17.
 >
 > Fixed some bugs
 
+**5.2**
+
+> 2025-02-28
+>
+> Added Mermaid picture save button
+>
+> Optimize appearance
+
 ## Quick Start
 
 ### Prerequisites
