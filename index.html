@@ -258,10 +258,13 @@
         }
 
         pre {
+            position: relative;
             background-color: rgb(31, 31, 31);
             border-radius: 10px;
             padding: 10px;
             margin-top: 6px;
+            color: #fff;
+            overflow: hidden;
         }
 
         code {
@@ -283,6 +286,29 @@
             background-color: rgb(31, 31, 31);
             border-radius: 0;
             color: #fff;
+        }
+
+        /* 定义复制按钮的样式 */
+        .copy-button {
+            position: absolute;
+            /* 按钮相对于 <pre> 元素定位 */
+            top: 10px;
+            /* 距离代码框顶部 10px */
+            right: 10px;
+            /* 距离代码框右侧 10px */
+            padding: 5px 10px;
+            font-size: 12px;
+            color: #282828;
+            background-color: rgb(239, 239, 239);
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        /* 复制成功后的提示样式 */
+        .copy-button.copied {
+            background-color: rgb(12, 170, 130);
         }
 
         mjx-container {
@@ -315,6 +341,7 @@
             overflow-wrap: break-word;
             white-space: normal;
             font-size: 16px;
+            overflow: hidden;
         }
 
         .gpt-msg> :first-child {
@@ -389,6 +416,26 @@
             overflow-wrap: break-word;
             white-space: normal;
             font-size: 16px;
+            overflow: hidden;
+        }
+
+        /* 固定容器大小 */
+        .mermaid {
+            width: 100%;
+            height: 400px;
+            overflow: auto;
+            margin: 10px 0;
+            border: #000 1px dashed;
+            border-radius: 10px;
+            background-color: #ccc;
+        }
+
+        /* 强制 Mermaid SVG 适配容器 */
+        .mermaid svg {
+            width: 100%;
+            height: 300px;
+            overflow: hidden;
+            position: relative;
         }
 
         /* 隐藏默认的checkbox样式 */
@@ -534,7 +581,9 @@
     </script>
     <script id="MathJax-script" async
         src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/mathjax/3.2.0/es5/tex-chtml.min.js"></script>
+    <!-- Mermaid 依赖库 -->
     <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/mermaid/8.14.0/mermaid.min.js"></script>
+    <script src="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/jquery.panzoom/4.0.0/panzoom.min.js"></script>
     <script>
         var historys;			   // 聊天历史记录嵌套数组
         var myHeaders = new Headers();
@@ -548,28 +597,28 @@
         function select_model(model_name) {
             for (i = 0; i < prompt_model_list.length; i++) {
                 if (model_name == prompt_model_list[i][0]) {
-                    return prompt_model_list[i][1]
+                    return prompt_model_list[i][1];
                 }
             }
-            return model_name
+            return model_name;
         }
         function select_prompt(model_name, prompts) {
             for (i = 0; i < prompt_model_list.length; i++) {
                 if (model_name == prompt_model_list[i][0]) {
-                    return prompt_model_list[i][2]
+                    return prompt_model_list[i][2];
                 }
             }
-            return prompts
+            return prompts;
         }
         function cleanhistory() {
             var model = document.getElementById("model").value;
             historys = [];
             cnt = 0;
-            selected_prompt = select_prompt(model, system_prompt)
+            selected_prompt = select_prompt(model, system_prompt);
             if (selected_prompt != null) {
                 cnt++;
                 issystem = 1;
-                historys.push({ 'role': 'system', 'content': selected_prompt })
+                historys.push({ 'role': 'system', 'content': selected_prompt });
             }
             else {
                 issystem = 0;
@@ -623,7 +672,7 @@
             };
             customElements.define('think-box', Think);
             //配置mermaid
-            mermaid.initialize({ startOnLoad: false, theme: 'neutral' })
+            mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
             //根据用户配置显示开屏提示
             if (isinfo == 1) { document.getElementById('infocard').style.display = 'block'; }
             //根据用户配置更改全局字体
@@ -666,10 +715,46 @@
             htmlString = htmlString.replace(/%%MATHJAX:(.*?)%%/g, '$1');
             return htmlString;
         }
-
+        function hideDMermaidElements() {
+            // 选择所有id以"dmermaid-"开头的元素
+            const elements = document.querySelectorAll('[id^="dmermaid-"]');
+            elements.forEach(element => {
+                element.style.display = 'none';
+            });
+        }
+        function initMermaidPanzoom(selector = '.mermaid') {
+            const containers = document.querySelectorAll(selector);
+            containers.forEach(container => {
+                const svg = container.querySelector('svg');
+                if (!svg || svg.panzoomInitialized) return;
+                svg.panzoomInitialized = true;
+                const panzoom = Panzoom(svg, {
+                    maxScale: 5,
+                    minScale: 0.5,
+                    step: 0.1,
+                    zoomSpeed: 0.2,
+                    pinchSpeed: 0.1,
+                    filterKey() { return false },
+                    preventDefault: true,
+                    onTouch: (e) => e.preventDefault(),
+                    onWheel: (e) => {
+                        e.preventDefault();
+                        return true;
+                    }
+                });
+                svg.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    const delta = e.deltaY > 0 ? -1 : 1; // 滚轮方向
+                    const scale = panzoom.getScale() + delta * 0.1; // 自定义缩放步长
+                    panzoom.zoom(scale, { animate: false });
+                }, { passive: false });
+            });
+        }
         function chat() {
             cansubmit = 0;
             document.getElementsByClassName('chat-container')[0].innerHTML += '<div class="row clearfix" id="message' + String(cnt) + '"><div class="gpt-icon"></div><div class="gpt-msg"></div><div class="gpt-msg-toolbox"><div class="msg-copy" onclick="copy(' + String(cnt) + ')"></div><div class="msg-withdraw" onclick="gpt_withdraw(' + String(cnt++) + ')"></div></div></div>';
+
+            addCopyButtons(".user-msg");
             ele = document.getElementsByClassName('gpt-msg')
             gpt_content = ele[ele.length - 1];
             gpt_content.innerText = "正在思考中，请稍候……";
@@ -711,6 +796,9 @@
                         MathJax.typeset();
                         gpt_content.innerHTML = boxed(gpt_content.innerHTML);
                         MathJax.typeset();
+                        initMermaidPanzoom('.mermaid');
+                        hideDMermaidElements();
+                        addCopyButtons(".gpt-msg");
 
                         cansubmit = 1;
                         const rows = document.querySelectorAll('.row');
@@ -773,15 +861,7 @@
                         return reader.read().then(processChunk); // 开始读取
                     })
                     .then(({ gpt_msg, gpt_thinking_msg, is_reasoning_model }) => {
-                        cansubmit = 1;
                         historys.push({ "role": "assistant", "content": gpt_msg });
-                        const rows = document.querySelectorAll('.row');
-                        rows.forEach(row => {
-                            const links = row.querySelectorAll('a');
-                            links.forEach(link => {
-                                link.target = '_blank';
-                            });
-                        });
                         if (is_reasoning_model == 1) {
                             gpt_content.innerHTML = '<label for="toggle' + String(cnt - 1) + '" class="toggle-label">深度思考详情</label><input type="checkbox" id="toggle' + String(cnt - 1) + '" class="toggle-checkbox"><think-box class="dropdown-content">' + md2html(gpt_thinking_msg) + '<br></think-box>' + md2html_all(gpt_msg);
                         } else {
@@ -790,11 +870,22 @@
                         MathJax.typeset();
                         gpt_content.innerHTML = boxed(gpt_content.innerHTML);
                         MathJax.typeset();
+                        initMermaidPanzoom('.mermaid');
+                        hideDMermaidElements();
+                        addCopyButtons(".gpt-msg");
+
+                        cansubmit = 1;
+                        const rows = document.querySelectorAll('.row');
+                        rows.forEach(row => {
+                            const links = row.querySelectorAll('a');
+                            links.forEach(link => {
+                                link.target = '_blank';
+                            });
+                        });
                     })
-                    // .catch(error => {
-                    //     gpt_content.innerText = "请求出现错误，错误信息：\n" + error + "\n请稍候点击[清空聊天]后重试。";
-                    // })
-                    ;
+                    .catch(error => {
+                        gpt_content.innerText = "请求出现错误，错误信息：\n" + error + "\n请稍候点击[清空聊天]后重试。";
+                    });
             }
         }
         function checkForMarkdown(text) {
@@ -804,6 +895,39 @@
             } else {
                 return text;
             }
+        }
+        function addCopyButtons(targetClass) {
+            const containers = document.querySelectorAll(targetClass);
+            if (containers.length === 0) {
+                console.warn(`未找到类名为 ${targetClass} 的元素`);
+                return;
+            }
+            containers.forEach((container) => {
+                const codeBlocks = container.querySelectorAll("pre code");
+                codeBlocks.forEach((codeBlock) => {
+                    const pre = codeBlock.parentElement;
+                    if (pre.querySelector(".copy-button")) {
+                        return;
+                    }
+                    const copyButton = document.createElement("button");
+                    copyButton.className = "copy-button";
+                    copyButton.textContent = "复制";
+                    pre.appendChild(copyButton);
+                    copyButton.addEventListener("click", () => {
+                        const codeContent = codeBlock.textContent;
+                        navigator.clipboard.writeText(codeContent).then(() => {
+                            copyButton.textContent = "已复制";
+                            copyButton.classList.add("copied");
+                            setTimeout(() => {
+                                copyButton.textContent = "复制";
+                                copyButton.classList.remove("copied");
+                            }, 2000);
+                        }).catch((err) => {
+                            console.error("复制失败:", err);
+                        });
+                    });
+                });
+            });
         }
         function submit() {
             if (cansubmit == 0) {
@@ -833,7 +957,7 @@
             chat();
         }
         function copy(i) {
-            copyToClipboard(historys[i].content)
+            copyToClipboard(historys[i].content);
         }
         function gpt_withdraw(i) {
             if (cansubmit == 0) {

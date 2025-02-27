@@ -70,6 +70,16 @@ This repository was published on Github platform on 2025-02-17.
 >
 > Fixed some streaming response bugs
 
+**5.1**
+
+> 2025-02-27
+>
+> Modified Mermaid chart rendering to support chart drag
+>
+> Added code copy button
+>
+> Fixed some bugs
+
 ## Quick Start
 
 ### Prerequisites
